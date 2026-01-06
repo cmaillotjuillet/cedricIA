@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+
+{% block title %}Nouveau patient - CedricIA{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Nouveau patient</h1>
+</div>
+
+<form method="POST" class="form-standard">
+    <h3>Informations personnelles</h3>
+
+    <div class="form-row">
+        <div class="form-group">
+            <label for="last_name">Nom *</label>
+            <input type="text" id="last_name" name="last_name" required>
+        </div>
+
+        <div class="form-group">
+            <label for="first_name">Prénom *</label>
+            <input type="text" id="first_name" name="first_name" required>
+        </div>
+    </div>
+
+    <div class="form-row">
+        <div class="form-group">
+            <label for="email">Email</label>
+            <input type="email" id="email" name="email">
+        </div>
+
+        <div class="form-group">
+            <label for="phone">Téléphone</label>
+            <input type="tel" id="phone" name="phone">
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label for="date_of_birth">Date de naissance</label>
+        <input type="date" id="date_of_birth" name="date_of_birth">
+    </div>
+
+    <div class="form-group">
+        <label for="address">Adresse</label>
+        <textarea id="address" name="address" rows="3"></textarea>
+    </div>
+
+    <h3>Informations médicales</h3>
+
+    <div class="form-group">
+        <label for="medical_history">Antécédents médicaux</label>
+        <textarea id="medical_history" name="medical_history" rows="4"></textarea>
+    </div>
+
+    <div class="form-group">
+        <label for="current_treatments">Traitements en cours</label>
+        <textarea id="current_treatments" name="current_treatments" rows="3"></textarea>
+    </div>
+
+    <div class="form-group">
+        <label for="allergies">Allergies</label>
+        <textarea id="allergies" name="allergies" rows="2"></textarea>
+    </div>
+
+    <div class="form-group">
+        <label for="emergency_contact">Contact d'urgence</label>
+        <input type="text" id="emergency_contact" name="emergency_contact"
+               placeholder="Nom et téléphone">
+    </div>
+
+    <h3>Informations thérapeutiques</h3>
+
+    <div class="form-group">
+        <label for="therapy_type">Type de thérapie</label>
+        <select id="therapy_type" name="therapy_type">
+            <option value="">Sélectionner...</option>
+            <option value="TCC">TCC (Thérapie Cognitivo-Comportementale)</option>
+            <option value="ACT">ACT (Thérapie d'Acceptation et d'Engagement)</option>
+            <option value="Sophrologie">Sophrologie</option>
+            <option value="Hypnose">Hypnose</option>
+            <option value="Neuropsychologie">Neuropsychologie</option>
+            <option value="Processuel">Thérapie Processuelle</option>
+            <option value="Mixte">Approche mixte</option>
+        </select>
+    </div>
+
+    <div class="form-group">
+        <label for="notes">Notes</label>
+        <textarea id="notes" name="notes" rows="5"
+                  placeholder="Motif de consultation, objectifs thérapeutiques..."></textarea>
+    </div>
+
+    <div class="form-actions">
+        <button type="submit" class="btn btn-primary">Créer le dossier patient</button>
+        <a href="{{ url_for('patients.list_patients') }}" class="btn btn-secondary">Annuler</a>
+    </div>
+</form>
+{% endblock %}

@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+
+{% block title %}Connexion - CedricIA{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+    <div class="auth-box">
+        <h2>Connexion</h2>
+        <form method="POST" action="{{ url_for('auth.login') }}">
+            <div class="form-group">
+                <label for="username">Nom d'utilisateur</label>
+                <input type="text" id="username" name="username" required autofocus>
+            </div>
+
+            <div class="form-group">
+                <label for="password">Mot de passe</label>
+                <input type="password" id="password" name="password" required>
+            </div>
+
+            <button type="submit" class="btn btn-primary">Se connecter</button>
+        </form>
+
+        <p class="auth-link">
+            Première utilisation ? <a href="{{ url_for('auth.register') }}">Créer un compte</a>
+        </p>
+    </div>
+</div>
+{% endblock %}

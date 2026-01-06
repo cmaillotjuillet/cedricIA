@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block title %}Inscription - CedricIA{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+    <div class="auth-box">
+        <h2>Créer votre compte</h2>
+        <form method="POST" action="{{ url_for('auth.register') }}">
+            <div class="form-group">
+                <label for="username">Nom d'utilisateur *</label>
+                <input type="text" id="username" name="username" required>
+            </div>
+
+            <div class="form-group">
+                <label for="email">Email *</label>
+                <input type="email" id="email" name="email" required>
+            </div>
+
+            <div class="form-group">
+                <label for="password">Mot de passe *</label>
+                <input type="password" id="password" name="password" required>
+            </div>
+
+            <div class="form-group">
+                <label for="first_name">Prénom</label>
+                <input type="text" id="first_name" name="first_name">
+            </div>
+
+            <div class="form-group">
+                <label for="last_name">Nom</label>
+                <input type="text" id="last_name" name="last_name">
+            </div>
+
+            <div class="form-group">
+                <label for="specialties">Spécialités</label>
+                <input type="text" id="specialties" name="specialties"
+                       placeholder="TCC, ACT, Sophrologie, Hypnose, Neuropsychologie...">
+                <small>Séparez les spécialités par des virgules</small>
+            </div>
+
+            <button type="submit" class="btn btn-primary">Créer mon compte</button>
+        </form>
+
+        <p class="auth-link">
+            Déjà inscrit ? <a href="{{ url_for('auth.login') }}">Se connecter</a>
+        </p>
+    </div>
+</div>
+{% endblock %}
