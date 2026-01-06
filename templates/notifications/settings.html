@@ -1,0 +1,174 @@
+{% extends "base.html" %}
+
+{% block title %}Configuration des notifications - CedricIA{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Configuration des notifications</h1>
+</div>
+
+<div class="settings-container">
+    <div class="status-card">
+        <h2>État de la configuration</h2>
+
+        <div class="status-item">
+            <span class="status-label">Twilio configuré :</span>
+            {% if config.twilio_configured %}
+                <span class="status-value success">✓ Oui</span>
+            {% else %}
+                <span class="status-value error">✗ Non configuré</span>
+                <p class="help-text">Ajoutez vos credentials Twilio dans le fichier .env</p>
+            {% endif %}
+        </div>
+
+        <div class="status-item">
+            <span class="status-label">Rappels automatiques :</span>
+            {% if config.enable_reminders %}
+                <span class="status-value success">✓ Activés</span>
+            {% else %}
+                <span class="status-value">✗ Désactivés</span>
+            {% endif %}
+        </div>
+
+        <div class="status-item">
+            <span class="status-label">Délai avant rappel :</span>
+            <span class="status-value">{{ config.reminder_hours_before }} heures</span>
+        </div>
+
+        <div class="status-item">
+            <span class="status-label">Méthode d'envoi :</span>
+            <span class="status-value">
+                {% if config.reminder_method == 'both' %}
+                    SMS + WhatsApp
+                {% elif config.reminder_method == 'sms' %}
+                    SMS uniquement
+                {% elif config.reminder_method == 'whatsapp' %}
+                    WhatsApp uniquement
+                {% endif %}
+            </span>
+        </div>
+    </div>
+
+    <div class="actions-card">
+        <h2>Actions</h2>
+
+        <div class="action-buttons">
+            <a href="{{ url_for('notifications.test') }}" class="btn btn-primary">
+                Tester les notifications
+            </a>
+
+            <a href="{{ url_for('notifications.pending_reminders') }}" class="btn btn-secondary">
+                Voir les rappels en attente
+            </a>
+
+            <a href="{{ url_for('notifications.history') }}" class="btn btn-secondary">
+                Historique des rappels
+            </a>
+        </div>
+    </div>
+
+    <div class="help-card">
+        <h2>Configuration Twilio</h2>
+
+        <p>Pour activer les notifications SMS et WhatsApp :</p>
+
+        <ol>
+            <li>Créez un compte sur <a href="https://www.twilio.com" target="_blank">Twilio.com</a></li>
+            <li>Obtenez vos credentials (Account SID et Auth Token)</li>
+            <li>Achetez un numéro de téléphone Twilio</li>
+            <li>Pour WhatsApp : configurez WhatsApp sandbox</li>
+            <li>Ajoutez les variables dans votre fichier <code>.env</code> :</li>
+        </ol>
+
+        <pre>TWILIO_ACCOUNT_SID=votre_account_sid
+TWILIO_AUTH_TOKEN=votre_auth_token
+TWILIO_PHONE_NUMBER=+33123456789
+TWILIO_WHATSAPP_NUMBER=whatsapp:+33123456789
+
+ENABLE_REMINDERS=True
+REMINDER_HOURS_BEFORE=24
+REMINDER_METHOD=both</pre>
+
+        <p><strong>Note :</strong> Les rappels automatiques sont envoyés chaque jour à 10h pour les rendez-vous du lendemain.</p>
+    </div>
+</div>
+
+<style>
+.settings-container {
+    max-width: 800px;
+}
+
+.status-card, .actions-card, .help-card {
+    background: white;
+    padding: 2rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    margin-bottom: 2rem;
+}
+
+.status-item {
+    display: flex;
+    align-items: center;
+    padding: 1rem 0;
+    border-bottom: 1px solid #ecf0f1;
+}
+
+.status-item:last-child {
+    border-bottom: none;
+}
+
+.status-label {
+    font-weight: 500;
+    min-width: 200px;
+}
+
+.status-value {
+    margin-left: 1rem;
+}
+
+.status-value.success {
+    color: #27ae60;
+    font-weight: bold;
+}
+
+.status-value.error {
+    color: #e74c3c;
+    font-weight: bold;
+}
+
+.help-text {
+    margin: 0.5rem 0 0 210px;
+    color: #7f8c8d;
+    font-size: 0.9rem;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.help-card pre {
+    background: #f8f9fa;
+    padding: 1rem;
+    border-radius: 4px;
+    overflow-x: auto;
+    font-size: 0.9rem;
+}
+
+.help-card code {
+    background: #f8f9fa;
+    padding: 0.2rem 0.4rem;
+    border-radius: 3px;
+    font-family: 'Courier New', monospace;
+}
+
+.help-card ol {
+    margin-left: 1.5rem;
+}
+
+.help-card li {
+    margin-bottom: 0.5rem;
+}
+</style>
+{% endblock %}

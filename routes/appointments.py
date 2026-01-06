@@ -87,7 +87,20 @@ def new_appointment():
         db.session.add(appointment)
         db.session.commit()
 
-        flash('Rendez-vous créé avec succès !', 'success')
+        # Ajouter à Google Calendar si configuré
+        try:
+            from utils.google_integration import GoogleIntegration
+            google = GoogleIntegration()
+            if google.calendar_service:
+                event_id = google.create_calendar_event(appointment)
+                appointment.google_event_id = event_id
+                db.session.commit()
+                flash('Rendez-vous créé et ajouté à Google Agenda !', 'success')
+            else:
+                flash('Rendez-vous créé avec succès !', 'success')
+        except Exception as e:
+            flash('Rendez-vous créé (erreur Google Agenda)', 'warning')
+
         return redirect(url_for('appointments.dashboard'))
 
     # Liste des patients pour le formulaire

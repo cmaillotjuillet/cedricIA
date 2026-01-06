@@ -3,24 +3,22 @@ from google.oauth2 import service_account
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 from config import Config
+from datetime import datetime, timedelta
 import os
 
-class GoogleDocsIntegration:
-    """Intégration avec Google Docs et Sheets"""
+class GoogleIntegration:
+    """Intégration complète avec Google Workspace (Docs, Sheets, Calendar)"""
 
     def __init__(self):
         self.credentials = None
         self.docs_service = None
         self.sheets_service = None
         self.drive_service = None
+        self.calendar_service = None
         self._setup_credentials()
 
     def _setup_credentials(self):
         """Configurer les credentials Google API"""
-        # Cette méthode nécessite la configuration d'un compte de service Google
-        # ou l'authentification OAuth2
-
-        # Pour l'instant, on utilise une approche simple avec un fichier de credentials
         credentials_file = os.path.join(os.path.dirname(__file__), '..', 'google_credentials.json')
 
         if os.path.exists(credentials_file):
@@ -28,7 +26,8 @@ class GoogleDocsIntegration:
                 SCOPES = [
                     'https://www.googleapis.com/auth/documents',
                     'https://www.googleapis.com/auth/spreadsheets',
-                    'https://www.googleapis.com/auth/drive.file'
+                    'https://www.googleapis.com/auth/drive.file',
+                    'https://www.googleapis.com/auth/calendar'
                 ]
 
                 self.credentials = service_account.Credentials.from_service_account_file(
@@ -38,35 +37,168 @@ class GoogleDocsIntegration:
                 self.docs_service = build('docs', 'v1', credentials=self.credentials)
                 self.sheets_service = build('sheets', 'v4', credentials=self.credentials)
                 self.drive_service = build('drive', 'v3', credentials=self.credentials)
+                self.calendar_service = build('calendar', 'v3', credentials=self.credentials)
 
             except Exception as e:
                 print(f"Erreur lors de la configuration des credentials: {e}")
                 self.credentials = None
 
+    # ===== GOOGLE CALENDAR =====
+
+    def create_calendar_event(self, appointment):
+        """Créer un événement dans Google Calendar"""
+        if not self.calendar_service:
+            raise Exception("Google Calendar API non configurée")
+
+        try:
+            patient = appointment.patient
+
+            # Créer la date/heure de début
+            start_datetime = datetime.combine(appointment.date, appointment.time)
+
+            # Calculer la fin (début + durée)
+            end_datetime = start_datetime + timedelta(minutes=appointment.duration)
+
+            # Formater pour Google Calendar (RFC3339)
+            start_str = start_datetime.isoformat()
+            end_str = end_datetime.isoformat()
+
+            # Créer l'événement
+            event = {
+                'summary': f'Séance - {patient.first_name} {patient.last_name}',
+                'description': f'''Type: {appointment.therapy_type or 'Consultation'}
+Durée: {appointment.duration} minutes
+Notes: {appointment.notes or 'Aucune note'}''',
+                'start': {
+                    'dateTime': start_str,
+                    'timeZone': 'Europe/Paris',
+                },
+                'end': {
+                    'dateTime': end_str,
+                    'timeZone': 'Europe/Paris',
+                },
+                'reminders': {
+                    'useDefault': False,
+                    'overrides': [
+                        {'method': 'popup', 'minutes': 24 * 60},  # 24h avant
+                        {'method': 'popup', 'minutes': 60},  # 1h avant
+                    ],
+                },
+            }
+
+            # Ajouter le téléphone du patient si disponible
+            if patient.phone:
+                event['description'] += f'\nTél patient: {patient.phone}'
+
+            created_event = self.calendar_service.events().insert(
+                calendarId='primary',
+                body=event
+            ).execute()
+
+            return created_event.get('id')
+
+        except HttpError as error:
+            raise Exception(f"Erreur lors de la création de l'événement: {error}")
+
+    def update_calendar_event(self, event_id, appointment):
+        """Mettre à jour un événement dans Google Calendar"""
+        if not self.calendar_service:
+            raise Exception("Google Calendar API non configurée")
+
+        try:
+            patient = appointment.patient
+
+            start_datetime = datetime.combine(appointment.date, appointment.time)
+            end_datetime = start_datetime + timedelta(minutes=appointment.duration)
+
+            event = {
+                'summary': f'Séance - {patient.first_name} {patient.last_name}',
+                'description': f'''Type: {appointment.therapy_type or 'Consultation'}
+Durée: {appointment.duration} minutes
+Statut: {appointment.status}
+Notes: {appointment.notes or 'Aucune note'}''',
+                'start': {
+                    'dateTime': start_datetime.isoformat(),
+                    'timeZone': 'Europe/Paris',
+                },
+                'end': {
+                    'dateTime': end_datetime.isoformat(),
+                    'timeZone': 'Europe/Paris',
+                },
+            }
+
+            if patient.phone:
+                event['description'] += f'\nTél patient: {patient.phone}'
+
+            updated_event = self.calendar_service.events().update(
+                calendarId='primary',
+                eventId=event_id,
+                body=event
+            ).execute()
+
+            return updated_event.get('id')
+
+        except HttpError as error:
+            raise Exception(f"Erreur lors de la mise à jour: {error}")
+
+    def delete_calendar_event(self, event_id):
+        """Supprimer un événement de Google Calendar"""
+        if not self.calendar_service:
+            raise Exception("Google Calendar API non configurée")
+
+        try:
+            self.calendar_service.events().delete(
+                calendarId='primary',
+                eventId=event_id
+            ).execute()
+            return True
+
+        except HttpError as error:
+            raise Exception(f"Erreur lors de la suppression: {error}")
+
+    def get_upcoming_events(self, days=7):
+        """Récupérer les événements à venir"""
+        if not self.calendar_service:
+            raise Exception("Google Calendar API non configurée")
+
+        try:
+            now = datetime.utcnow().isoformat() + 'Z'
+            future = (datetime.utcnow() + timedelta(days=days)).isoformat() + 'Z'
+
+            events_result = self.calendar_service.events().list(
+                calendarId='primary',
+                timeMin=now,
+                timeMax=future,
+                singleEvents=True,
+                orderBy='startTime'
+            ).execute()
+
+            return events_result.get('items', [])
+
+        except HttpError as error:
+            raise Exception(f"Erreur lors de la récupération: {error}")
+
+    # ===== GOOGLE DOCS =====
+
     def create_session_document(self, session):
         """Créer un document Google Docs pour une séance"""
         if not self.docs_service:
-            raise Exception("Google Docs API non configurée. Veuillez ajouter le fichier google_credentials.json")
+            raise Exception("Google Docs API non configurée")
 
         try:
-            # Créer le document
             title = f"Séance {session.patient.first_name} {session.patient.last_name} - {session.session_date.strftime('%d/%m/%Y')}"
 
             document = self.docs_service.documents().create(body={'title': title}).execute()
             doc_id = document.get('documentId')
 
-            # Préparer le contenu
             content = self._format_session_content(session)
 
-            # Insérer le contenu
-            requests = [
-                {
-                    'insertText': {
-                        'location': {'index': 1},
-                        'text': content
-                    }
+            requests = [{
+                'insertText': {
+                    'location': {'index': 1},
+                    'text': content
                 }
-            ]
+            }]
 
             self.docs_service.documents().batchUpdate(
                 documentId=doc_id,
@@ -115,13 +247,14 @@ Numéro de séance: {session.session_number or 'N/A'}
 
         return content
 
+    # ===== GOOGLE SHEETS =====
+
     def create_patient_spreadsheet(self, patient):
         """Créer une feuille de calcul Google Sheets pour suivre l'évolution d'un patient"""
         if not self.sheets_service:
-            raise Exception("Google Sheets API non configurée. Veuillez ajouter le fichier google_credentials.json")
+            raise Exception("Google Sheets API non configurée")
 
         try:
-            # Créer la feuille
             title = f"Suivi {patient.first_name} {patient.last_name}"
 
             spreadsheet = {
@@ -148,8 +281,6 @@ Numéro de séance: {session.session_number or 'N/A'}
             ).execute()
 
             spreadsheet_id = spreadsheet.get('spreadsheetId')
-
-            # Ajouter les en-têtes
             self._add_spreadsheet_headers(spreadsheet_id)
 
             return spreadsheet_id
@@ -159,14 +290,12 @@ Numéro de séance: {session.session_number or 'N/A'}
 
     def _add_spreadsheet_headers(self, spreadsheet_id):
         """Ajouter les en-têtes aux feuilles"""
-        # En-têtes pour les séances
         session_headers = [
             'Date', 'Numéro', 'Type de thérapie', 'Objectifs',
             'Interventions', 'Progrès', 'Humeur (1-10)', 'Anxiété (1-10)',
             'Exercices', 'Prochaine séance'
         ]
 
-        # En-têtes pour les questionnaires
         questionnaire_headers = [
             'Date', 'Questionnaire', 'Score total', 'Interprétation', 'Notes'
         ]
@@ -265,3 +394,7 @@ Numéro de séance: {session.session_number or 'N/A'}
 
         except HttpError as error:
             raise Exception(f"Erreur lors de l'export du questionnaire: {error}")
+
+
+# Alias pour compatibilité ascendante
+GoogleDocsIntegration = GoogleIntegration

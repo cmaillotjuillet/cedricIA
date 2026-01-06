@@ -40,6 +40,23 @@ Application web complète pour la gestion d'un cabinet de psychothérapie, neuro
 - Suivi de l'évolution des patients
 - Synchronisation optionnelle
 
+### 📅 Synchronisation Google Calendar
+- **Synchronisation automatique bidirectionnelle**
+- Chaque rendez-vous créé est automatiquement ajouté à votre Google Agenda
+- Modification et suppression synchronisées
+- Rappels Google Calendar intégrés (24h et 1h avant)
+- Accès à vos rendez-vous depuis n'importe quel appareil
+
+### 📱 Rappels automatiques SMS & WhatsApp
+- **Rappels automatiques quotidiens** envoyés 24h avant les rendez-vous
+- Support SMS et WhatsApp via Twilio
+- Messages personnalisés avec nom du patient, date, heure et type de séance
+- Envoi automatique chaque jour à 10h
+- Rappels manuels possibles depuis l'interface
+- **WhatsApp 16x moins cher que les SMS !**
+- Interface de test pour vérifier la configuration
+- Historique des rappels envoyés
+
 ## Installation
 
 ### Prérequis
@@ -115,6 +132,44 @@ L'application sera accessible à l'adresse : **http://localhost:5000**
    - Créez des rendez-vous
    - Faites passer des questionnaires
    - Générez des documents PDF
+
+## Configuration des intégrations (optionnel)
+
+### Google Calendar
+
+Pour synchroniser automatiquement vos rendez-vous avec Google Agenda :
+
+1. Suivez le guide détaillé dans [INTEGRATIONS.md](INTEGRATIONS.md#-google-calendar---synchronisation-automatique)
+2. Créez un projet Google Cloud et activez Google Calendar API
+3. Téléchargez le fichier `google_credentials.json`
+4. Placez-le à la racine du projet
+
+✅ **Une fois configuré** : Tous les rendez-vous sont automatiquement synchronisés !
+
+### SMS & WhatsApp (Twilio)
+
+Pour envoyer des rappels automatiques par SMS ou WhatsApp :
+
+1. Créez un compte sur [Twilio.com](https://www.twilio.com/try-twilio) (crédit gratuit offert)
+2. Obtenez vos credentials (Account SID et Auth Token)
+3. Ajoutez-les dans le fichier `.env` :
+
+```bash
+TWILIO_ACCOUNT_SID=votre_account_sid
+TWILIO_AUTH_TOKEN=votre_auth_token
+TWILIO_PHONE_NUMBER=+33123456789
+TWILIO_WHATSAPP_NUMBER=whatsapp:+14155238886
+
+ENABLE_REMINDERS=True
+REMINDER_HOURS_BEFORE=24
+REMINDER_METHOD=both  # ou 'sms' ou 'whatsapp'
+```
+
+4. Consultez le guide complet : [INTEGRATIONS.md](INTEGRATIONS.md#-notifications-sms--whatsapp)
+
+✅ **Une fois configuré** : Les rappels sont envoyés automatiquement chaque jour à 10h !
+
+**Note** : Ces intégrations sont optionnelles. L'application fonctionne parfaitement sans elles.
 
 ## Utilisation
 

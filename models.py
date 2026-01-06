@@ -74,6 +74,7 @@ class Appointment(db.Model):
     status = db.Column(db.String(50), default='scheduled')  # scheduled, completed, cancelled, no_show
     notes = db.Column(db.Text)
     reminder_sent = db.Column(db.Boolean, default=False)
+    google_event_id = db.Column(db.String(200))  # ID de l'événement Google Calendar
 
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)

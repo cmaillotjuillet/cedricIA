@@ -22,7 +22,7 @@ os.makedirs(app.config['PDF_FOLDER'], exist_ok=True)
 from models import User, Patient, Appointment, Questionnaire, QuestionnaireResponse
 
 # Import des routes
-from routes import auth, patients, appointments, questionnaires, documents
+from routes import auth, patients, appointments, questionnaires, documents, notifications
 
 # Enregistrement des blueprints
 app.register_blueprint(auth.bp)
@@ -30,6 +30,7 @@ app.register_blueprint(patients.bp)
 app.register_blueprint(appointments.bp)
 app.register_blueprint(questionnaires.bp)
 app.register_blueprint(documents.bp)
+app.register_blueprint(notifications.bp)
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -69,7 +70,17 @@ def dashboard():
                          total_patients=total_patients,
                          total_appointments=total_appointments)
 
+# Initialiser le scheduler pour les rappels automatiques
+from utils.scheduler import AppScheduler
+scheduler = AppScheduler(app)
+scheduler.setup_jobs()
+
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
-    app.run(debug=True)
+
+    try:
+        app.run(debug=True)
+    finally:
+        # Arrêter le scheduler proprement
+        scheduler.shutdown()
