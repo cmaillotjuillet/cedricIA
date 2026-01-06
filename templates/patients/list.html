@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+
+{% block title %}Patients - CedricIA{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Patients</h1>
+    <a href="{{ url_for('patients.new_patient') }}" class="btn btn-primary">Nouveau patient</a>
+</div>
+
+<div class="search-box">
+    <form method="GET" action="{{ url_for('patients.list_patients') }}">
+        <input type="text" name="search" placeholder="Rechercher un patient..." value="{{ search }}">
+        <button type="submit" class="btn">Rechercher</button>
+    </form>
+</div>
+
+{% if patients.items %}
+    <div class="table-container">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Nom</th>
+                    <th>Prénom</th>
+                    <th>Email</th>
+                    <th>Téléphone</th>
+                    <th>Type de thérapie</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for patient in patients.items %}
+                    <tr>
+                        <td>{{ patient.last_name }}</td>
+                        <td>{{ patient.first_name }}</td>
+                        <td>{{ patient.email or '-' }}</td>
+                        <td>{{ patient.phone or '-' }}</td>
+                        <td>{{ patient.therapy_type or '-' }}</td>
+                        <td>
+                            <a href="{{ url_for('patients.view_patient', patient_id=patient.id) }}" class="btn btn-sm">Voir</a>
+                            <a href="{{ url_for('patients.edit_patient', patient_id=patient.id) }}" class="btn btn-sm">Modifier</a>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="pagination">
+        {% if patients.has_prev %}
+            <a href="{{ url_for('patients.list_patients', page=patients.prev_num, search=search) }}">&laquo; Précédent</a>
+        {% endif %}
+        <span>Page {{ patients.page }} sur {{ patients.pages }}</span>
+        {% if patients.has_next %}
+            <a href="{{ url_for('patients.list_patients', page=patients.next_num, search=search) }}">Suivant &raquo;</a>
+        {% endif %}
+    </div>
+{% else %}
+    <p class="empty-state">Aucun patient trouvé</p>
+{% endif %}
+{% endblock %}

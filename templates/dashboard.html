@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+
+{% block title %}Tableau de bord - CedricIA{% endblock %}
+
+{% block content %}
+<div class="dashboard">
+    <div class="dashboard-header">
+        <h1>Tableau de bord</h1>
+        <div class="quick-actions">
+            <a href="{{ url_for('appointments.new_appointment') }}" class="btn btn-primary">Nouveau rendez-vous</a>
+            <a href="{{ url_for('patients.new_patient') }}" class="btn btn-secondary">Nouveau patient</a>
+        </div>
+    </div>
+
+    <div class="stats-grid">
+        <div class="stat-card">
+            <h3>Patients actifs</h3>
+            <p class="stat-number">{{ total_patients }}</p>
+        </div>
+        <div class="stat-card">
+            <h3>Rendez-vous aujourd'hui</h3>
+            <p class="stat-number">{{ today_appointments|length }}</p>
+        </div>
+        <div class="stat-card">
+            <h3>Total rendez-vous</h3>
+            <p class="stat-number">{{ total_appointments }}</p>
+        </div>
+    </div>
+
+    <div class="dashboard-grid">
+        <div class="dashboard-section">
+            <h2>Rendez-vous d'aujourd'hui</h2>
+            {% if today_appointments %}
+                <div class="appointments-list">
+                    {% for appointment in today_appointments %}
+                        <div class="appointment-card">
+                            <div class="appointment-time">{{ appointment.time.strftime('%H:%M') }}</div>
+                            <div class="appointment-info">
+                                <h4>{{ appointment.patient.first_name }} {{ appointment.patient.last_name }}</h4>
+                                <p>{{ appointment.therapy_type or 'Séance' }} - {{ appointment.duration }} min</p>
+                            </div>
+                            <div class="appointment-actions">
+                                <a href="{{ url_for('appointments.view_appointment', appointment_id=appointment.id) }}" class="btn btn-sm">Voir</a>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p class="empty-state">Aucun rendez-vous aujourd'hui</p>
+            {% endif %}
+        </div>
+
+        <div class="dashboard-section">
+            <h2>Prochains rendez-vous</h2>
+            {% if upcoming_appointments %}
+                <div class="appointments-list">
+                    {% for appointment in upcoming_appointments %}
+                        <div class="appointment-card">
+                            <div class="appointment-date">{{ appointment.date.strftime('%d/%m') }}</div>
+                            <div class="appointment-time">{{ appointment.time.strftime('%H:%M') }}</div>
+                            <div class="appointment-info">
+                                <h4>{{ appointment.patient.first_name }} {{ appointment.patient.last_name }}</h4>
+                                <p>{{ appointment.therapy_type or 'Séance' }}</p>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p class="empty-state">Aucun rendez-vous à venir</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
