@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+
+{% block title %}Calendrier - {{ month_name }} {{ year }} - CedricIA{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>{{ month_name }} {{ year }}</h1>
+    <div class="quick-actions">
+        <a href="{{ url_for('appointments.calendar', year=prev_year, month=prev_month) }}" class="btn btn-secondary" aria-label="Mois précédent">&laquo; Précédent</a>
+        <a href="{{ url_for('appointments.calendar') }}" class="btn btn-secondary">Aujourd'hui</a>
+        <a href="{{ url_for('appointments.calendar', year=next_year, month=next_month) }}" class="btn btn-secondary" aria-label="Mois suivant">Suivant &raquo;</a>
+        <a href="{{ url_for('appointments.new_appointment') }}" class="btn btn-primary">Nouveau rendez-vous</a>
+    </div>
+</div>
+
+<div class="calendar-wrapper">
+<table class="calendar">
+    <thead>
+        <tr>{% for d in day_names %}<th scope="col">{{ d }}</th>{% endfor %}</tr>
+    </thead>
+    <tbody>
+        {% for week in weeks %}
+        <tr>
+            {% for day in week %}
+            <td class="{% if day.month != month %}other-month{% endif %}{% if day == today %} today{% endif %}">
+                <div class="day-head">
+                    <span class="day-number">{{ day.day }}</span>
+                    <a href="{{ url_for('appointments.new_appointment', date=day.strftime('%Y-%m-%d')) }}" class="day-add"
+                       title="Nouveau rendez-vous le {{ day.strftime('%d/%m/%Y') }}" aria-label="Nouveau rendez-vous le {{ day.strftime('%d/%m/%Y') }}">+</a>
+                </div>
+                {% for apt in by_day.get(day, []) %}
+                    <a href="{{ url_for('appointments.view_appointment', appointment_id=apt.id) }}" class="cal-event badge-{{ apt.status }}">
+                        {{ apt.time.strftime('%H:%M') }} {{ apt.patient.last_name }}
+                    </a>
+                {% endfor %}
+            </td>
+            {% endfor %}
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+</div>
+{% endblock %}

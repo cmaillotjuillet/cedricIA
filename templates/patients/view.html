@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+
+{% block title %}{{ patient.first_name }} {{ patient.last_name }} - CedricIA{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>{{ patient.first_name }} {{ patient.last_name }}{% if not patient.active %} <span class="badge badge-cancelled">Archivé</span>{% endif %}</h1>
+    <div class="quick-actions">
+        <a href="{{ url_for('appointments.new_appointment', patient_id=patient.id) }}" class="btn btn-primary">Nouveau RDV</a>
+        <a href="{{ url_for('patients.edit_patient', patient_id=patient.id) }}" class="btn btn-secondary">Modifier</a>
+        <a href="{{ url_for('documents.generate_patient_file', patient_id=patient.id) }}" class="btn btn-secondary">Dossier PDF</a>
+        <a href="{{ url_for('documents.patient_documents', patient_id=patient.id) }}" class="btn btn-secondary">Documents</a>
+    </div>
+</div>
+
+<div class="card">
+    <h2>Informations</h2>
+    <dl class="info-grid">
+        <dt>Email</dt><dd>{{ patient.email or '-' }}</dd>
+        <dt>Téléphone</dt><dd>{{ patient.phone or '-' }}</dd>
+        <dt>Date de naissance</dt><dd>{{ patient.date_of_birth.strftime('%d/%m/%Y') if patient.date_of_birth else '-' }}</dd>
+        <dt>Adresse</dt><dd>{{ patient.address or '-' }}</dd>
+        <dt>Contact d'urgence</dt><dd>{{ patient.emergency_contact or '-' }}</dd>
+        <dt>Type de thérapie</dt><dd>{{ patient.therapy_type or '-' }}</dd>
+        <dt>Première séance</dt><dd>{{ patient.first_session_date.strftime('%d/%m/%Y') if patient.first_session_date else '-' }}</dd>
+    </dl>
+</div>
+
+<div class="card">
+    <h2>Antécédents</h2>
+    <dl class="info-grid">
+        <dt>Antécédents médicaux</dt><dd class="pre">{{ patient.medical_history or '-' }}</dd>
+        <dt>Traitements en cours</dt><dd class="pre">{{ patient.current_treatments or '-' }}</dd>
+        <dt>Allergies</dt><dd class="pre">{{ patient.allergies or '-' }}</dd>
+        <dt>Notes</dt><dd class="pre">{{ patient.notes or '-' }}</dd>
+    </dl>
+</div>
+
+<div class="card">
+    <h2>Questionnaires</h2>
+    {% if available_questionnaires %}
+    <form class="inline-form" id="administer-form">
+        <label for="administer-select">Faire passer maintenant :</label>
+        <select id="administer-select">
+            {% for q in available_questionnaires %}
+                <option value="{{ url_for('questionnaires.administer_questionnaire', questionnaire_id=q.id, patient_id=patient.id) }}">{{ q.short_name or q.name }} — {{ q.name }}</option>
+            {% endfor %}
+        </select>
+        <button type="submit" class="btn btn-primary btn-sm">Commencer</button>
+    </form>
+    {% endif %}
+
+    {% if questionnaires %}
+    <div class="table-container">
+        <table class="data-table">
+            <thead>
+                <tr><th>Date</th><th>Questionnaire</th><th>Score</th><th>Actions</th></tr>
+            </thead>
+            <tbody>
+                {% for r in questionnaires %}
+                <tr>
+                    <td>{{ r.completed_at.strftime('%d/%m/%Y') if r.completed_at else '-' }}</td>
+                    <td>{{ r.questionnaire.short_name or r.questionnaire.name }}</td>
+                    <td>{{ '%g'|format(r.total_score) if r.total_score is not none else '-' }}</td>
+                    <td><a href="{{ url_for('questionnaires.view_response', response_id=r.id) }}" class="btn btn-sm">Voir</a></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+        <p class="empty-state">Aucun questionnaire passé</p>
+    {% endif %}
+</div>
+
+<div class="card">
+    <h2>Rendez-vous</h2>
+    {% if appointments %}
+    <div class="table-container">
+        <table class="data-table">
+            <thead>
+                <tr><th>Date</th><th>Heure</th><th>Type</th><th>Statut</th><th>Actions</th></tr>
+            </thead>
+            <tbody>
+                {% for a in appointments %}
+                <tr>
+                    <td>{{ a.date.strftime('%d/%m/%Y') }}</td>
+                    <td>{{ a.time.strftime('%H:%M') }}</td>
+                    <td>{{ a.therapy_type or a.appointment_type or '-' }}</td>
+                    <td><span class="badge badge-{{ a.status }}">{{ a.status|statut }}</span></td>
+                    <td><a href="{{ url_for('appointments.view_appointment', appointment_id=a.id) }}" class="btn btn-sm">Voir</a></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+        <p class="empty-state">Aucun rendez-vous</p>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function () {
+    var form = document.getElementById('administer-form');
+    if (!form) return;
+    form.addEventListener('submit', function (e) {
+        e.preventDefault();
+        window.location.href = document.getElementById('administer-select').value;
+    });
+})();
+</script>
+{% endblock %}

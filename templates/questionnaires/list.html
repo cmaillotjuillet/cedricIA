@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block title %}Questionnaires - CedricIA{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Questionnaires</h1>
+    <a href="{{ url_for('questionnaires.new_questionnaire') }}" class="btn btn-primary">Nouveau questionnaire</a>
+</div>
+
+{% if questionnaires %}
+<div class="table-container">
+    <table class="data-table">
+        <thead>
+            <tr><th>Sigle</th><th>Nom</th><th>Catégorie</th><th>Questions</th><th>Actions</th></tr>
+        </thead>
+        <tbody>
+            {% for q in questionnaires %}
+            <tr>
+                <td><strong>{{ q.short_name or '-' }}</strong></td>
+                <td>{{ q.name }}</td>
+                <td>{{ q.category or '-' }}</td>
+                <td>{{ (q.questions or [])|length }}</td>
+                <td><a href="{{ url_for('questionnaires.view_questionnaire', questionnaire_id=q.id) }}" class="btn btn-sm">Voir / imprimer</a></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+    <p class="empty-state">Aucun questionnaire. Lancez <code>python3 init_db.py</code> pour ajouter les questionnaires prédéfinis.</p>
+{% endif %}
+{% endblock %}

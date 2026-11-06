@@ -51,7 +51,7 @@ Application web complète pour la gestion d'un cabinet de psychothérapie, neuro
 - **Rappels automatiques quotidiens** envoyés 24h avant les rendez-vous
 - Support SMS et WhatsApp via Twilio
 - Messages personnalisés avec nom du patient, date, heure et type de séance
-- Envoi automatique chaque jour à 10h
+- Envoi automatique : vérification toutes les heures de 8h à 20h, un rappel unique par RDV environ 24h avant
 - Rappels manuels possibles depuis l'interface
 - **WhatsApp 16x moins cher que les SMS !**
 - Interface de test pour vérifier la configuration
@@ -143,6 +143,8 @@ Pour synchroniser automatiquement vos rendez-vous avec Google Agenda :
 2. Créez un projet Google Cloud et activez Google Calendar API
 3. Téléchargez le fichier `google_credentials.json`
 4. Placez-le à la racine du projet
+5. Dans Google Agenda, partagez votre agenda avec l'email du compte de service (`client_email` du fichier JSON), droit « Apporter des modifications aux événements »
+6. Renseignez l'agenda dans `.env` : `GOOGLE_CALENDAR_ID=votre_adresse@gmail.com` (sinon les rendez-vous partent dans l'agenda invisible du compte de service), puis relancez `python3 app.py`
 
 ✅ **Une fois configuré** : Tous les rendez-vous sont automatiquement synchronisés !
 
@@ -167,7 +169,7 @@ REMINDER_METHOD=both  # ou 'sms' ou 'whatsapp'
 
 4. Consultez le guide complet : [INTEGRATIONS.md](INTEGRATIONS.md#-notifications-sms--whatsapp)
 
-✅ **Une fois configuré** : Les rappels sont envoyés automatiquement chaque jour à 10h !
+✅ **Une fois configuré** : Les rappels partent automatiquement : vérification toutes les heures de 8h à 20h, un rappel unique par RDV environ 24h avant !
 
 **Note** : Ces intégrations sont optionnelles. L'application fonctionne parfaitement sans elles.
 

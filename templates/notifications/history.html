@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+
+{% block title %}Historique des rappels - CedricIA{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Historique des rappels</h1>
+    <a href="{{ url_for('notifications.settings') }}" class="btn btn-secondary">Retour</a>
+</div>
+
+{% if sent_reminders %}
+<div class="table-container">
+    <table class="data-table">
+        <thead><tr><th>Date du RDV</th><th>Heure</th><th>Patient</th><th>Statut</th><th></th></tr></thead>
+        <tbody>
+            {% for a in sent_reminders %}
+            <tr>
+                <td>{{ a.date.strftime('%d/%m/%Y') }}</td>
+                <td>{{ a.time.strftime('%H:%M') }}</td>
+                <td>{{ a.patient.first_name }} {{ a.patient.last_name }}</td>
+                <td><span class="badge badge-{{ a.status }}">{{ a.status|statut }}</span></td>
+                <td><a href="{{ url_for('appointments.view_appointment', appointment_id=a.id) }}" class="btn btn-sm">Voir</a></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+    <p class="empty-state">Aucun rappel envoyé pour le moment</p>
+{% endif %}
+{% endblock %}

@@ -224,27 +224,23 @@ class ReminderScheduler:
         from models import Appointment
         from datetime import datetime, timedelta
 
-        # Calculer la plage de temps
+        # Fenêtre : RDV qui commencent strictement après maintenant et au plus
+        # tard dans `hours_before` heures. Comme reminder_sent passe à True
+        # après l'envoi, chaque RDV ne reçoit qu'un seul rappel.
         now = datetime.now()
-        target_start = now + timedelta(hours=hours_before - 1)
-        target_end = now + timedelta(hours=hours_before + 1)
+        limit = now + timedelta(hours=hours_before)
 
-        # Récupérer les rendez-vous
         appointments = Appointment.query.filter(
             Appointment.status == 'scheduled',
-            Appointment.reminder_sent == False,
-            Appointment.date >= target_start.date(),
-            Appointment.date <= target_end.date()
-        ).all()
+            Appointment.reminder_sent == False,  # noqa: E712
+            Appointment.date >= now.date(),
+            Appointment.date <= limit.date()
+        ).order_by(Appointment.date, Appointment.time).all()
 
-        # Filtrer par heure
         appointments_to_remind = []
         for apt in appointments:
             apt_datetime = datetime.combine(apt.date, apt.time)
-            time_diff = (apt_datetime - now).total_seconds() / 3600
-
-            # Si dans la fenêtre de rappel (hours_before ± 1 heure)
-            if hours_before - 1 <= time_diff <= hours_before + 1:
+            if now < apt_datetime <= limit:
                 appointments_to_remind.append(apt)
 
         return appointments_to_remind

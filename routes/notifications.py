@@ -63,7 +63,7 @@ def send_reminder(appointment_id):
 
     if not notification_service.is_configured():
         flash('Service de notifications non configuré', 'error')
-        return redirect(request.referrer or url_for('appointments.dashboard'))
+        return redirect(request.referrer or url_for('dashboard'))
 
     try:
         result = notification_service.send_appointment_reminder(appointment, method=method)

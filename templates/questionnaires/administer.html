@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block title %}{{ questionnaire.short_name or questionnaire.name }} - {{ patient.first_name }} {{ patient.last_name }} - CedricIA{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>{{ questionnaire.name }}</h1>
+    <p>Patient : <strong>{{ patient.first_name }} {{ patient.last_name }}</strong></p>
+</div>
+
+<form method="POST" class="form-standard">
+    {% if questionnaire.description %}<p class="questionnaire-description">{{ questionnaire.description }}</p>{% endif %}
+
+    {% set required = true %}
+    {% include "questionnaires/_questions.html" %}
+
+    <div class="form-group">
+        <label for="notes">Notes du praticien</label>
+        <textarea id="notes" name="notes" rows="3"></textarea>
+    </div>
+
+    <div class="form-actions">
+        <button type="submit" class="btn btn-primary">Enregistrer les réponses</button>
+        <a href="{{ url_for('patients.view_patient', patient_id=patient.id) }}" class="btn btn-secondary">Annuler</a>
+    </div>
+</form>
+{% endblock %}

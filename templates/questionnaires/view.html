@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+
+{% block title %}{{ questionnaire.short_name or questionnaire.name }} - CedricIA{% endblock %}
+
+{% block content %}
+<div class="page-header no-print">
+    <h1>{{ questionnaire.name }}</h1>
+    <div class="quick-actions">
+        <button type="button" class="btn btn-primary" onclick="window.print()">Imprimer (version papier)</button>
+        <a href="{{ url_for('questionnaires.list_questionnaires') }}" class="btn btn-secondary">Retour</a>
+    </div>
+</div>
+
+{% if patients %}
+<div class="card no-print">
+    <form class="inline-form" id="administer-form">
+        <label for="patient-select">Faire passer à :</label>
+        <select id="patient-select">
+            {% for pt in patients %}
+                <option value="{{ url_for('questionnaires.administer_questionnaire', questionnaire_id=questionnaire.id, patient_id=pt.id) }}">{{ pt.last_name }} {{ pt.first_name }}</option>
+            {% endfor %}
+        </select>
+        <button type="submit" class="btn btn-primary btn-sm">Commencer la passation</button>
+    </form>
+</div>
+{% endif %}
+
+<div class="questionnaire-paper">
+    <h1 class="print-only print-title">{{ questionnaire.name }}</h1>
+    <div class="print-only print-fields">
+        <span>Nom : ______________________________</span>
+        <span>Date : ____ / ____ / ________</span>
+    </div>
+
+    {% if questionnaire.description %}<p class="questionnaire-description">{{ questionnaire.description }}</p>{% endif %}
+
+    <div class="questions">
+        {% include "questionnaires/_questions.html" %}
+    </div>
+</div>
+
+{% if questionnaire.scoring_method or questionnaire.interpretation %}
+<div class="card scoring">
+    {% if questionnaire.scoring_method %}
+        <h2>Méthode de cotation</h2>
+        <p class="pre">{{ questionnaire.scoring_method|trim }}</p>
+    {% endif %}
+    {% if questionnaire.interpretation %}
+        <h2>Interprétation</h2>
+        <p class="pre">{{ questionnaire.interpretation|trim }}</p>
+    {% endif %}
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function () {
+    var form = document.getElementById('administer-form');
+    if (!form) return;
+    form.addEventListener('submit', function (e) {
+        e.preventDefault();
+        window.location.href = document.getElementById('patient-select').value;
+    });
+})();
+</script>
+{% endblock %}

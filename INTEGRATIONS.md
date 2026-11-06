@@ -62,6 +62,18 @@ cedricIA/
 5. Permissions : "Apporter des modifications aux événements"
 6. Enregistrez
 
+#### 7. Indiquer votre agenda dans `.env`
+
+Ajoutez dans le fichier `.env` l'identifiant de l'agenda partagé (pour un agenda Gmail principal, c'est votre adresse Gmail ; sinon : Paramètres de l'agenda > « Intégrer l'agenda » > « ID de l'agenda ») :
+
+```
+GOOGLE_CALENDAR_ID=votre_adresse@gmail.com
+```
+
+⚠️ Sans cette ligne, les rendez-vous sont créés dans l'agenda propre au compte de service, que vous ne voyez pas.
+
+Redémarrez ensuite l'application (`python3 app.py`).
+
 ### Utilisation
 
 Une fois configuré, **chaque nouveau rendez-vous sera automatiquement** :
@@ -141,7 +153,7 @@ REMINDER_METHOD=both  # ou 'sms' ou 'whatsapp'
 
 #### Rappels automatiques
 
-Les rappels sont envoyés **automatiquement chaque jour à 10h** pour :
+Les rappels sont envoyés **automatiquement** (vérification toutes les heures de 8h à 20h, un rappel unique par RDV environ 24h avant) pour :
 - Les rendez-vous du lendemain (24h avant)
 - Format professionnel avec date, heure, type de séance
 - Message personnalisé avec le prénom du patient
@@ -199,17 +211,19 @@ Depuis la fiche d'un rendez-vous :
 
 Dans `utils/scheduler.py`, ligne ~50 :
 ```python
-# Rappels de rendez-vous - tous les jours à 10h
+# Rappels : vérification toutes les heures de 8h à 20h
 self.scheduler.add_job(
     func=lambda: send_automatic_reminders(self.app),
-    trigger=CronTrigger(hour=10, minute=0),  # Modifier l'heure ici
+    trigger=CronTrigger(hour='8-20', minute=0),  # Modifier la plage ici
     ...
 )
 ```
 
 Exemples :
-- `hour=9, minute=0` : Rappels à 9h
-- `hour=20, minute=30` : Rappels à 20h30
+- `hour='9-19', minute=0` : vérification toutes les heures de 9h à 19h
+- `hour='8-20', minute=30` : vérification à la demie, de 8h30 à 20h30
+
+Chaque RDV ne reçoit qu'un seul rappel : dès qu'il entre dans la fenêtre de `REMINDER_HOURS_BEFORE` heures, le rappel part à la vérification suivante.
 
 ### Modifier le délai de rappel
 
@@ -294,7 +308,7 @@ Menu "Notifications" > "Historique"
 Les logs du scheduler s'affichent dans la console :
 ```
 INFO:__main__:Scheduler démarré
-INFO:__main__:Tâche planifiée : Rappels quotidiens à 10h
+INFO:utils.scheduler:Tâche planifiée : vérification des rappels toutes les heures de 8h à 20h
 INFO:__main__:Rappels envoyés : 5/5
 ```
 

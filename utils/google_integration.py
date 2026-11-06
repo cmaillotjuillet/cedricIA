@@ -15,6 +15,9 @@ class GoogleIntegration:
         self.sheets_service = None
         self.drive_service = None
         self.calendar_service = None
+        # Agenda cible : sans GOOGLE_CALENDAR_ID, 'primary' désigne l'agenda
+        # (invisible) du compte de service lui-même.
+        self.calendar_id = os.environ.get('GOOGLE_CALENDAR_ID') or 'primary'
         self._setup_credentials()
 
     def _setup_credentials(self):
@@ -91,7 +94,7 @@ Notes: {appointment.notes or 'Aucune note'}''',
                 event['description'] += f'\nTél patient: {patient.phone}'
 
             created_event = self.calendar_service.events().insert(
-                calendarId='primary',
+                calendarId=self.calendar_id,
                 body=event
             ).execute()
 
@@ -131,7 +134,7 @@ Notes: {appointment.notes or 'Aucune note'}''',
                 event['description'] += f'\nTél patient: {patient.phone}'
 
             updated_event = self.calendar_service.events().update(
-                calendarId='primary',
+                calendarId=self.calendar_id,
                 eventId=event_id,
                 body=event
             ).execute()
@@ -148,7 +151,7 @@ Notes: {appointment.notes or 'Aucune note'}''',
 
         try:
             self.calendar_service.events().delete(
-                calendarId='primary',
+                calendarId=self.calendar_id,
                 eventId=event_id
             ).execute()
             return True
@@ -166,7 +169,7 @@ Notes: {appointment.notes or 'Aucune note'}''',
             future = (datetime.utcnow() + timedelta(days=days)).isoformat() + 'Z'
 
             events_result = self.calendar_service.events().list(
-                calendarId='primary',
+                calendarId=self.calendar_id,
                 timeMin=now,
                 timeMax=future,
                 singleEvents=True,

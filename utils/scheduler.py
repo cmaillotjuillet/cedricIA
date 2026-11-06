@@ -1,7 +1,6 @@
 """
 Scheduler pour les tâches automatiques
 - Envoi de rappels de rendez-vous
-- Synchronisation Google Calendar
 """
 
 from apscheduler.schedulers.background import BackgroundScheduler
@@ -51,42 +50,6 @@ def send_automatic_reminders(app):
             logger.error(f"Erreur lors de l'envoi des rappels : {e}")
 
 
-def sync_google_calendar(app):
-    """Synchroniser avec Google Calendar"""
-    with app.app_context():
-        try:
-            from utils.google_integration import GoogleIntegration
-            from models import Appointment
-
-            google = GoogleIntegration()
-
-            if not google.calendar_service:
-                logger.warning("Google Calendar non configuré")
-                return
-
-            # Récupérer les rendez-vous récents sans ID Google
-            from datetime import datetime, timedelta
-            today = datetime.now().date()
-
-            appointments = Appointment.query.filter(
-                Appointment.date >= today,
-                Appointment.status == 'scheduled'
-            ).all()
-
-            synced = 0
-            for appointment in appointments:
-                # Vérifier si l'événement existe déjà dans Google Calendar
-                # (vous pouvez ajouter un champ google_event_id au modèle Appointment)
-                # Pour l'instant, on log simplement
-                logger.info(f"Sync RDV {appointment.id}: {appointment.date} {appointment.time}")
-                synced += 1
-
-            logger.info(f"{synced} rendez-vous vérifiés pour la synchronisation")
-
-        except Exception as e:
-            logger.error(f"Erreur lors de la synchronisation Google Calendar : {e}")
-
-
 class AppScheduler:
     """Gestionnaire de tâches planifiées"""
 
@@ -100,25 +63,17 @@ class AppScheduler:
     def setup_jobs(self):
         """Configurer les tâches planifiées"""
 
-        # Rappels de rendez-vous - tous les jours à 10h
+        # Rappels : vérification toutes les heures de 8h à 20h.
+        # Chaque RDV reçoit un rappel unique environ REMINDER_HOURS_BEFORE
+        # heures avant (reminder_sent évite les doublons).
         self.scheduler.add_job(
             func=lambda: send_automatic_reminders(self.app),
-            trigger=CronTrigger(hour=10, minute=0),
+            trigger=CronTrigger(hour='8-20', minute=0),
             id='send_reminders',
             name='Envoi des rappels de rendez-vous',
             replace_existing=True
         )
-        logger.info("Tâche planifiée : Rappels quotidiens à 10h")
-
-        # Synchronisation Google Calendar - toutes les heures
-        self.scheduler.add_job(
-            func=lambda: sync_google_calendar(self.app),
-            trigger=CronTrigger(minute=0),  # Toutes les heures
-            id='sync_calendar',
-            name='Synchronisation Google Calendar',
-            replace_existing=True
-        )
-        logger.info("Tâche planifiée : Sync Google Calendar toutes les heures")
+        logger.info("Tâche planifiée : vérification des rappels toutes les heures de 8h à 20h")
 
     def send_test_reminder(self):
         """Envoyer un rappel de test (pour debug)"""

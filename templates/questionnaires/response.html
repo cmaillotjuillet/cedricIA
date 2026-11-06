@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+
+{% block title %}{{ response.questionnaire.short_name or response.questionnaire.name }} - Résultats - CedricIA{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>{{ response.questionnaire.name }}</h1>
+    <div class="quick-actions">
+        <a href="{{ url_for('documents.generate_questionnaire_report', response_id=response.id) }}" class="btn btn-primary">PDF</a>
+        <a href="{{ url_for('patients.view_patient', patient_id=response.patient_id) }}" class="btn btn-secondary">Retour au patient</a>
+    </div>
+</div>
+
+<div class="card">
+    <dl class="info-grid">
+        <dt>Patient</dt><dd>{{ response.patient.first_name }} {{ response.patient.last_name }}</dd>
+        <dt>Date</dt><dd>{{ response.completed_at.strftime('%d/%m/%Y %H:%M') if response.completed_at else '-' }}</dd>
+        {% if subscores|length > 1 %}
+            {% for label, value in subscores %}
+                <dt>Score {{ label }}</dt><dd class="score">{{ '%g'|format(value) }}</dd>
+            {% endfor %}
+        {% else %}
+            <dt>Score total</dt><dd class="score">{{ '%g'|format(response.total_score) if response.total_score is not none else '-' }}</dd>
+        {% endif %}
+        {% if response.notes %}<dt>Notes</dt><dd class="pre">{{ response.notes }}</dd>{% endif %}
+    </dl>
+</div>
+
+<div class="card">
+    <h2>Réponses</h2>
+    <div class="table-container">
+        <table class="data-table">
+            <thead><tr><th>N°</th><th>Question</th><th>Réponse</th><th>Points</th></tr></thead>
+            <tbody>
+                {% for d in details %}
+                <tr>
+                    <td>{{ d.number }}</td>
+                    <td>{{ d.text }}</td>
+                    <td>{{ d.answer or 'Non répondu' }}</td>
+                    <td>{{ '%g'|format(d.score) if d.score is not none else '-' }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% if response.questionnaire.scoring_method or response.questionnaire.interpretation %}
+<div class="card">
+    {% if response.questionnaire.scoring_method %}
+        <h2>Méthode de cotation</h2>
+        <p class="pre">{{ response.questionnaire.scoring_method|trim }}</p>
+    {% endif %}
+    {% if response.questionnaire.interpretation %}
+        <h2>Interprétation</h2>
+        <p class="pre">{{ response.questionnaire.interpretation|trim }}</p>
+    {% endif %}
+</div>
+{% endif %}
+{% endblock %}

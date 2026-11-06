@@ -1,0 +1,100 @@
+{# Formulaire RDV commun (création et modification).
+   Variables : patients, appointment (édition) ou selected_patient_id / selected_date (création). #}
+{% set a = appointment if appointment is defined else None %}
+{% set cur_patient = a.patient_id if a else (selected_patient_id if selected_patient_id is defined else None) %}
+{% set cur_date = a.date.strftime('%Y-%m-%d') if a else (selected_date if selected_date is defined and selected_date else '') %}
+{% set cur_time = a.time.strftime('%H:%M') if a else '' %}
+
+<div class="form-group">
+    <label for="patient_id">Patient *</label>
+    <select id="patient_id" name="patient_id" required>
+        <option value="">Sélectionner un patient...</option>
+        {% for pt in patients %}
+            <option value="{{ pt.id }}" {% if cur_patient == pt.id %}selected{% endif %}>{{ pt.last_name }} {{ pt.first_name }}</option>
+        {% endfor %}
+        {% if a and a.patient and not a.patient.active %}
+            <option value="{{ a.patient.id }}" selected>{{ a.patient.last_name }} {{ a.patient.first_name }} (archivé)</option>
+        {% endif %}
+    </select>
+    {% if not patients %}<small>Aucun patient actif : <a href="{{ url_for('patients.new_patient') }}">créer un patient</a>.</small>{% endif %}
+</div>
+
+<div class="form-row">
+    <div class="form-group">
+        <label for="date">Date *</label>
+        <input type="date" id="date" name="date" required value="{{ cur_date }}">
+    </div>
+    <div class="form-group">
+        <label for="time">Heure *</label>
+        <input type="time" id="time" name="time" required value="{{ cur_time }}">
+    </div>
+</div>
+
+<div class="form-group">
+    <span class="label">Créneaux libres (9h-18h)</span>
+    <div id="available-slots" class="slots" aria-live="polite">
+        <small>Choisissez une date pour afficher les créneaux libres.</small>
+    </div>
+</div>
+
+<div class="form-row">
+    <div class="form-group">
+        <label for="duration">Durée (minutes)</label>
+        <input type="number" id="duration" name="duration" min="15" step="15" value="{{ a.duration if a and a.duration else 60 }}">
+    </div>
+    <div class="form-group">
+        <label for="therapy_type">Type de thérapie</label>
+        {% set cur_therapy = (a.therapy_type or '') if a else '' %}
+        <select id="therapy_type" name="therapy_type">
+            <option value="">Sélectionner...</option>
+            {% for value in ['TCC', 'ACT', 'Processuel', 'Neuropsychologie', 'Sophrologie', 'Hypnose', 'Mixte'] %}
+                <option value="{{ value }}" {% if cur_therapy == value %}selected{% endif %}>{{ value }}</option>
+            {% endfor %}
+        </select>
+    </div>
+</div>
+
+<div class="form-group">
+    <label for="appointment_type">Type de rendez-vous</label>
+    {% set cur_type = (a.appointment_type or '') if a else '' %}
+    <select id="appointment_type" name="appointment_type">
+        {% for value in ['Première consultation', 'Suivi', 'Bilan', 'Séance de groupe'] %}
+            <option value="{{ value }}" {% if cur_type == value %}selected{% endif %}>{{ value }}</option>
+        {% endfor %}
+    </select>
+</div>
+
+<div class="form-group">
+    <label for="notes">Notes</label>
+    <textarea id="notes" name="notes" rows="4">{{ (a.notes or '') if a else '' }}</textarea>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    var dateInput = document.getElementById('date');
+    var timeInput = document.getElementById('time');
+    var box = document.getElementById('available-slots');
+
+    async function refreshSlots() {
+        if (!dateInput.value) return;
+        box.innerHTML = '<small>Chargement…</small>';
+        var slots = await checkAvailableSlots(dateInput.value);
+        box.innerHTML = '';
+        if (!slots || !slots.length) {
+            box.innerHTML = '<small>Aucun créneau libre ce jour-là.</small>';
+            return;
+        }
+        slots.forEach(function (slot) {
+            var b = document.createElement('button');
+            b.type = 'button';
+            b.className = 'btn btn-sm btn-slot';
+            b.textContent = slot;
+            b.addEventListener('click', function () { timeInput.value = slot; });
+            box.appendChild(b);
+        });
+    }
+
+    dateInput.addEventListener('change', refreshSlots);
+    refreshSlots();
+});
+</script>

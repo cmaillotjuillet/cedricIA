@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+
+{% block title %}Rendez-vous du {{ appointment.date.strftime('%d/%m/%Y') }} - CedricIA{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Rendez-vous du {{ appointment.date.strftime('%d/%m/%Y') }} à {{ appointment.time.strftime('%H:%M') }}</h1>
+    <span class="badge badge-{{ appointment.status }}">{{ appointment.status|statut }}</span>
+</div>
+
+<div class="card">
+    <dl class="info-grid">
+        <dt>Patient</dt>
+        <dd><a href="{{ url_for('patients.view_patient', patient_id=appointment.patient.id) }}">{{ appointment.patient.first_name }} {{ appointment.patient.last_name }}</a></dd>
+        <dt>Téléphone</dt><dd>{{ appointment.patient.phone or '-' }}</dd>
+        <dt>Durée</dt><dd>{{ appointment.duration }} minutes</dd>
+        <dt>Type de thérapie</dt><dd>{{ appointment.therapy_type or '-' }}</dd>
+        <dt>Type de rendez-vous</dt><dd>{{ appointment.appointment_type or '-' }}</dd>
+        <dt>Notes</dt><dd class="pre">{{ appointment.notes or '-' }}</dd>
+        <dt>Google Agenda</dt><dd>{{ 'Synchronisé' if appointment.google_event_id else 'Non synchronisé' }}</dd>
+        <dt>Rappel</dt><dd>{{ 'Envoyé' if appointment.reminder_sent else 'Pas encore envoyé' }}</dd>
+    </dl>
+
+    <div class="form-actions">
+        <a href="{{ url_for('appointments.edit_appointment', appointment_id=appointment.id) }}" class="btn btn-primary">Modifier</a>
+        {% if appointment.status != 'cancelled' %}
+        <form method="POST" action="{{ url_for('appointments.cancel_appointment', appointment_id=appointment.id) }}"
+              onsubmit="return confirm('Annuler ce rendez-vous ?');">
+            <button type="submit" class="btn btn-danger">Annuler le rendez-vous</button>
+        </form>
+        {% endif %}
+    </div>
+</div>
+
+{% if appointment.status == 'scheduled' %}
+<div class="card">
+    <h2>Envoyer un rappel maintenant</h2>
+    <form method="POST" action="{{ url_for('notifications.send_reminder', appointment_id=appointment.id) }}" class="inline-form">
+        <label for="method">Par :</label>
+        <select id="method" name="method">
+            <option value="sms">SMS</option>
+            <option value="whatsapp">WhatsApp</option>
+            <option value="both" selected>SMS + WhatsApp</option>
+        </select>
+        <button type="submit" class="btn btn-secondary">Envoyer le rappel</button>
+    </form>
+</div>
+{% endif %}
+{% endblock %}

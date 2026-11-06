@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+
+{% block title %}Modifier le rendez-vous - CedricIA{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Modifier le rendez-vous</h1>
+</div>
+
+<form method="POST" class="form-standard">
+    {% include "appointments/_form.html" %}
+
+    <div class="form-group">
+        <label for="status">Statut</label>
+        <select id="status" name="status">
+            {% for value in ['scheduled', 'completed', 'cancelled', 'no_show'] %}
+                <option value="{{ value }}" {% if appointment.status == value %}selected{% endif %}>{{ value|statut }}</option>
+            {% endfor %}
+        </select>
+        <small>Si vous changez la date ou l'heure, un nouveau rappel sera envoyé.</small>
+    </div>
+
+    <div class="form-actions">
+        <button type="submit" class="btn btn-primary">Enregistrer</button>
+        <a href="{{ url_for('appointments.view_appointment', appointment_id=appointment.id) }}" class="btn btn-secondary">Annuler</a>
+    </div>
+</form>
+{% endblock %}

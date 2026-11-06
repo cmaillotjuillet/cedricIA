@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+
+{% block title %}Nouveau rendez-vous - CedricIA{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Nouveau rendez-vous</h1>
+</div>
+
+<form method="POST" action="{{ url_for('appointments.new_appointment') }}" class="form-standard">
+    {% include "appointments/_form.html" %}
+
+    <div class="form-actions">
+        <button type="submit" class="btn btn-primary">Créer le rendez-vous</button>
+        <a href="{{ url_for('appointments.calendar') }}" class="btn btn-secondary">Annuler</a>
+    </div>
+</form>
+{% endblock %}

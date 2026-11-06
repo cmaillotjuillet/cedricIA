@@ -1,0 +1,20 @@
+{# Questions d'un questionnaire : boutons radio dont la valeur est le score.
+   Variables : questionnaire, required (bool, optionnel) #}
+{% for question in questionnaire.questions|questions_ordonnees %}
+    {% set qid = question.get('id', loop.index) %}
+    {% set options = question.get('options') or [] %}
+    {% set scores = question.get('scores') or range(options|length)|list %}
+    <fieldset class="question-block">
+        <legend><span class="question-number">{{ qid }}.</span> {{ question.get('text', 'Question ' ~ loop.index) }}</legend>
+        <div class="question-options">
+            {% for opt in options %}
+                {% set sc = scores[loop.index0] if loop.index0 < scores|length else loop.index0 %}
+                <label class="option">
+                    <input type="radio" name="question_{{ qid }}" value="{{ sc }}" {% if required is defined and required %}required{% endif %}>
+                    <span class="print-box" aria-hidden="true">☐</span>
+                    <span class="option-text">{{ opt }}</span>
+                </label>
+            {% endfor %}
+        </div>
+    </fieldset>
+{% endfor %}

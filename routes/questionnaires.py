@@ -18,7 +18,8 @@ def list_questionnaires():
 def view_questionnaire(questionnaire_id):
     """Voir un questionnaire"""
     questionnaire = Questionnaire.query.get_or_404(questionnaire_id)
-    return render_template('questionnaires/view.html', questionnaire=questionnaire)
+    patients = Patient.query.filter_by(active=True).order_by(Patient.last_name, Patient.first_name).all()
+    return render_template('questionnaires/view.html', questionnaire=questionnaire, patients=patients)
 
 @bp.route('/<int:questionnaire_id>/administer/<int:patient_id>', methods=['GET', 'POST'])
 @login_required
@@ -62,7 +63,11 @@ def administer_questionnaire(questionnaire_id, patient_id):
 def view_response(response_id):
     """Voir les réponses à un questionnaire"""
     response = QuestionnaireResponse.query.get_or_404(response_id)
-    return render_template('questionnaires/response.html', response=response)
+    details, subscores = build_response_details(response)
+    return render_template('questionnaires/response.html',
+                           response=response,
+                           details=details,
+                           subscores=subscores)
 
 @bp.route('/new', methods=['GET', 'POST'])
 @login_required
@@ -72,7 +77,13 @@ def new_questionnaire():
         # Récupérer les questions au format JSON
         questions_data = request.form.get('questions_json')
         import json
-        questions = json.loads(questions_data) if questions_data else []
+        try:
+            questions = json.loads(questions_data) if questions_data else []
+            if not isinstance(questions, list):
+                raise ValueError('une liste [...] est attendue')
+        except ValueError as e:
+            flash(f'Format JSON des questions invalide : {e}', 'error')
+            return render_template('questionnaires/new.html', form=request.form)
 
         questionnaire = Questionnaire(
             name=request.form.get('name'),
@@ -90,7 +101,7 @@ def new_questionnaire():
         flash('Questionnaire créé avec succès !', 'success')
         return redirect(url_for('questionnaires.list_questionnaires'))
 
-    return render_template('questionnaires/new.html')
+    return render_template('questionnaires/new.html', form={})
 
 def calculate_score(questionnaire, responses):
     """Calculer le score d'un questionnaire"""
@@ -109,3 +120,65 @@ def calculate_score(questionnaire, responses):
                 pass
 
     return total
+
+
+SUBSCALE_LABELS = {
+    'anxiety': 'Anxiété',
+    'depression': 'Dépression',
+}
+
+
+def build_response_details(response):
+    """Retrouver le libellé de chaque réponse et calculer les sous-scores.
+
+    Retourne (details, subscores) :
+    - details : liste de dicts {number, text, answer, score}
+    - subscores : liste de (libellé, score) par sous-échelle, dans l'ordre
+      d'apparition des questions
+    """
+    answers = response.responses or {}
+    questions = list(response.questionnaire.questions or [])
+    if questions and all(isinstance(q.get('id'), int) for q in questions):
+        questions.sort(key=lambda q: q['id'])
+    details = []
+    subscores = {}
+
+    for idx, question in enumerate(questions, 1):
+        qid = str(question.get('id', idx))
+        raw = answers.get(qid)
+        options = question.get('options') or []
+        scores = question.get('scores') or list(range(len(options)))
+        label = None
+        score = None
+
+        if raw not in (None, ''):
+            try:
+                score = float(raw)
+            except (TypeError, ValueError):
+                score = None
+            if score is not None:
+                for opt, sc in zip(options, scores):
+                    try:
+                        if float(sc) == score:
+                            label = opt
+                            break
+                    except (TypeError, ValueError):
+                        continue
+            if label is None:
+                label = str(raw)
+
+        subscale = question.get('subscale')
+        if subscale:
+            key = SUBSCALE_LABELS.get(subscale, subscale.capitalize())
+            subscores.setdefault(key, 0)
+            if score is not None:
+                subscores[key] += score
+
+        details.append({
+            'number': question.get('id', idx),
+            'text': question.get('text', 'Question {}'.format(idx)),
+            'answer': label,
+            'score': score,
+        })
+
+    return details, list(subscores.items())
