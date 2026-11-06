@@ -53,3 +53,7 @@ Thumbs.db
 # PDFs générés
 generated_pdfs/
 exports/
+
+# Clés Google (ne jamais publier)
+google_credentials.json
+*-credentials.json
