@@ -113,8 +113,13 @@ if __name__ == '__main__':
     scheduler.setup_jobs()
 
     try:
-        # Port 5000 souvent pris par AirPlay sur Mac : le lanceur utilise 5050
-        app.run(debug=True, use_reloader=False,
-                port=int(os.environ.get('PORT', 5000)))
+        # Port 5000 souvent pris par AirPlay sur Mac : le lanceur utilise 5050.
+        # Écoute uniquement sur le Mac (127.0.0.1) : l'accès à distance passe
+        # par « tailscale serve ». Mode développeur désactivé par défaut
+        # (CEDRICIA_DEBUG=1 pour le réactiver).
+        app.run(host='127.0.0.1',
+                port=int(os.environ.get('PORT', 5000)),
+                debug=os.environ.get('CEDRICIA_DEBUG') == '1',
+                use_reloader=False)
     finally:
         scheduler.shutdown()

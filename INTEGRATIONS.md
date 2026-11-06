@@ -374,3 +374,21 @@ Consultez le README.md ou ouvrez une issue sur GitHub.
 
 **Besoin d'aide ?**
 Vérifiez d'abord ce guide, puis les logs de l'application.
+
+## 📱 Accès depuis le téléphone (Tailscale)
+
+L'application reste sur le Mac : Tailscale crée un tunnel privé et chiffré
+entre vos appareils. Rien n'est publié sur internet.
+
+1. Installez Tailscale sur le Mac (App Store ou tailscale.com/download) et sur
+   le téléphone, connectés au même compte.
+2. Sur le Mac, avec CedricIA lancé, dans Terminal :
+   `tailscale serve --bg 5050`
+   (si « command not found » :
+   `/Applications/Tailscale.app/Contents/MacOS/Tailscale serve --bg 5050`).
+   Acceptez l'activation des certificats HTTPS si elle est proposée.
+3. La commande affiche une adresse `https://….ts.net` : ouvrez-la sur le
+   téléphone et ajoutez-la à l'écran d'accueil.
+
+Le Mac doit rester allumé (Réglages système > Énergie : empêcher la suspension
+automatique) et CedricIA lancé.

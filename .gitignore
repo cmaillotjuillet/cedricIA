@@ -25,6 +25,7 @@ wheels/
 
 # Flask
 instance/
+.secret_key
 .webassets-cache
 
 # Base de données

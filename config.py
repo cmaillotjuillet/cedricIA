@@ -1,14 +1,32 @@
 import os
+import secrets
 from dotenv import load_dotenv
 
 basedir = os.path.abspath(os.path.dirname(__file__))
 load_dotenv(os.path.join(basedir, '.env'))
 
+
+def _secret_key():
+    """Clé secrète des sessions : celle du .env, sinon une clé aléatoire
+    créée au premier lancement et conservée dans .secret_key (jamais dans Git)."""
+    key = os.environ.get('SECRET_KEY')
+    if key and key != 'votre_cle_secrete_a_changer':
+        return key
+    path = os.path.join(basedir, '.secret_key')
+    if not os.path.exists(path):
+        with open(path, 'w') as f:
+            f.write(secrets.token_hex(32))
+        os.chmod(path, 0o600)
+    with open(path) as f:
+        return f.read().strip()
+
 class Config:
     """Configuration de base pour l'application"""
 
     # Clé secrète pour les sessions
-    SECRET_KEY = os.environ.get('SECRET_KEY') or 'dev-secret-key-change-in-production'
+    SECRET_KEY = _secret_key()
+    SESSION_COOKIE_HTTPONLY = True
+    SESSION_COOKIE_SAMESITE = 'Lax'
 
     # Configuration de la base de données
     SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or \
